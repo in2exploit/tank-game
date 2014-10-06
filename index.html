@@ -1,0 +1,170 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>The Tank Game</title>
+    <style type="text/css">
+        body {
+            overflow:hidden;
+        }
+        #howto{
+            float: right;
+            height: 400px;
+            width: 300px;
+            border: solid #000000;
+            margin-top: 50px;
+        }
+    </style>
+    <script type="text/javascript">
+        window.addEventListener('load', eventWindowLoaded, false);
+
+        var Debugger = function () { };
+        Debugger.log = function (message) {
+            try {
+                console.log(message);
+            } catch (exception) {
+                return;
+            }
+        };
+
+        function eventWindowLoaded() {
+            canvasApp();
+        }
+
+        function canvasApp(){
+            var theCanavas = document.getElementById("canvas");
+            var context = theCanavas.getContext("2d");
+
+            var tileSheet = new Image();
+            tileSheet.addEventListener('load', eventSheetLoaded , false);
+            tileSheet.src = "tanks_sheet.png";
+
+            var p1 = {x:theCanavas.width/4,y:theCanavas.height/4};
+
+            var tank = {
+                x:p1.x,
+                y:p1.y,
+                angle:0,
+                speed:5,
+                xunits:0,
+                yunits:0,
+                radians:0,
+                animationFrames : [1,2,3,4,5,6,7,8],
+                frameIndex: 0,
+                isMoving: true,
+                direction:"north",
+
+                move: function(direction){
+                    switch (direction){
+                        case "north":
+                            this.xunits = -this.xunits;
+                            this.direction = "north";
+                            break;
+
+                        case "south":
+                            this.xunits = -this.xunits;
+                            this.direction = "north";
+                            break;
+
+                        case "right":
+                            this.angle += this.speed;
+                            break;
+
+                        case "left":
+                            this.angle -= this.speed;
+                            break;
+                    }
+                }
+            };
+
+            updateTank();
+
+            function updateTank(direction, isMoving){
+
+                tank.radians = tank.angle * Math.PI/180;
+                tank.xunits = Math.cos(tank.radians)*tank.speed;
+                tank.yunits = Math.sin(tank.radians)*tank.speed;
+                tank.move(direction);
+                tank.isMoving = isMoving;
+            }
+
+            function eventSheetLoaded() {
+                drawScreen();
+            }
+
+            function drawScreen() {
+
+                if (tank.isMoving){
+                    tank.y += tank.xunits;
+                    tank.x += tank.yunits;
+                }
+
+                var sourceX = Math.floor(tank.animationFrames[tank.frameIndex] % 8) *32;
+                var sourceY = Math.floor(tank.animationFrames[tank.frameIndex] / 8) *32;
+
+                context.fillStyle = "#CFCFCF";
+                context.fillRect(0,0,theCanavas.width, theCanavas.height);
+
+                context.save();
+                context.setTransform(1,0,0,1,0,0);
+                context.translate(tank.x+16, tank.y+16);
+                Debugger.log("tank x: " + tank.x + " tank y: " + tank.y);
+                context.rotate(tank.radians);
+
+
+                context.drawImage(tileSheet, sourceX, sourceY,32,32,-16,-16,32,32);
+                context.restore();
+
+                tank.frameIndex++;
+                if (tank.frameIndex == tank.animationFrames.length) {
+                    tank.frameIndex=0;
+                }
+            }
+
+            window.addEventListener('keydown', keyDown, false);
+
+            function keyDown(e){
+                switch (e.keyCode) {
+                    case 38:
+                        updateTank("north", true);
+                        drawScreen();
+                        break;
+
+//                    case 40:
+//                        break;
+//                        todo: implement reverse gear
+
+                    case 39:
+                        updateTank("right", false);
+                        drawScreen();
+                        break;
+
+                    case 37:
+                        updateTank("left", false);
+                        drawScreen();
+                        break;
+                }
+            }
+        }
+
+    </script>
+</head>
+<body>
+<div style="position: absolute; top: 50px; left: 50px;">
+    <canvas id="canvas" width="500" height="500">
+        Your browser does not support the HTML 5 Canvas!!
+    </canvas>
+</div>
+<div id="howto">
+
+    <p>To play with tank please use arrow keys</p>
+    <ul>
+        <li>up = arrow up</li>
+        <li>right = arrow right</li>
+        <li>left = arrow left</li>
+        <li>down = not implemented</li>
+    </ul>
+</div>
+</body>
+</html>
